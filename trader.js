@@ -301,6 +301,10 @@ class Trader extends EventEmitter{
         if (this._retry > 3) {
             this.fetch_ticker()
         }
+        if(this.base_balance < this._minOrder){
+            console.log('Insuficient funds!')
+            return false
+        }
         let price = Utils.roundToNearest(this._retry > 3 ? this.ticker.data.askPrice : this.last_price, this._tickSize)
         // let qty = Utils.roundToNearest((this.base_balance / price), this._minQty)
         let qty = Utils.roundToNearest((0.0012 / price), this._minQty)
