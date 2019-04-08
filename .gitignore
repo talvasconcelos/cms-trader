@@ -170,4 +170,4 @@ crashlytics-build.properties
 /lib
 /.cache/
 /dist/
-config.json
+config.js
