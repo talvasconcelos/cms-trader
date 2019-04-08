@@ -3,7 +3,7 @@ const EventEmitter = require('events')
 const continuous = require('continuous')
 const Utils = require('./utils')
 
-class Trader {
+class Trader extends EventEmitter{
     constructor(opts) {
         this._test = true
         this._busy_executing = false
@@ -301,7 +301,8 @@ class Trader {
             this.fetch_ticker()
         }
         let price = Utils.roundToNearest(this._retry > 3 ? this.ticker.data.askPrice : this.last_price, this._tickSize)
-        let qty = Utils.roundToNearest((this.base_balance / price), this._minQty)
+        // let qty = Utils.roundToNearest((this.base_balance / price), this._minQty)
+        let qty = Utils.roundToNearest((0.0012 / price), this._minQty)
         if (price * qty < this._minOrder) {
             console.error('Minimum order must be', this._minOrder + '.')
             return false

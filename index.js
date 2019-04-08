@@ -1,7 +1,7 @@
-const Trader = require('./trader')
 const WebSocket = require('ws')
 const api = require('binance')
-const config = require('config')
+const config = require('./config')
+const Trader = require(`./strategies/${config.strategy}`)
 
 const cmsWS = new WebSocket('wss://market-scanner.herokuapp.com')
 const client = new api.BinanceRest({
@@ -20,33 +20,56 @@ if(config.telegram){
   slimbot.startPolling()
 }
 
-const trader = new Trader()
-
+let bot
 
 cmsWS.on('open', () => {console.log(`Connected to CMS`)})
 cmsWS.on('close', () => {console.log(`Lost connection!!`)})
 
 cmsWS.on('message', (msg) => {
-    if(trader.is_trading){
+    if(bot && bot.is_trading){
       console.log(`Bot is trading!`)
       return
     }
     const data = JSON.parse(msg)
+    const regex = new RegExp("/(" + config.currency +")$/g")
     if (data.hasOwnProperty('to') && data.to == 'trader'){
         const pair = data.data.sort((a, b) => {
             return b.prob - a.prob
-        }).filter(p => (/(BTC)$/g).test(p.pair))
+        }).filter(p => (regex).test(p.pair))
+        if(!pair.length) {
+          console.log('No pairs to trade!')
+          return
+        }
         // console.log(pair, data.timestamp)
         let now = Date.now()
         let diff = new Date(now - data.timestamp).getMinutes()
         if(pair[0].pair && diff < 6){
-            trader.start_trading({
+            bot = new Trader({
+              client,
+              base: config.currency,
+              websocket
+            })
+            return bot.start_trading({
                 pair: pair[0].pair
             })
         }
     }
 })
 
+if(typeof bot != 'undefined' && config.telegram){
+  bot.on('traderCheckOrder', (msg) => {
+    slimbot.sendMessage(311268748, msg, {parse_mode: 'Markdown'})
+  })
+
+  bot.on('traderPersistenceTrigger', (persistence) => {
+    let msg = `Sell price triggered, persistence activated: ${this.persistence}!`
+    slimbot.sendMessage(311268748, msg, {parse_mode: 'Markdown'})
+  })
+  bot.on('traderSelling', (price) => {
+    let msg = `Trying to sell ${bot._asset} for ${price}!`
+    slimbot.sendMessage(311268748, msg, {parse_mode: 'Markdown'})
+  })
+}
 
 /*
 { symbol: 'STORJETH',
