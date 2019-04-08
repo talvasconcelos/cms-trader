@@ -74,7 +74,7 @@ class Bot extends Trader {
         }
         if(this.last_price <= this.sellPrice){
           if(this.persistence <= 3) {
-            this.log(`Sell price triggered, persistence activated: ${this.persistence}`n)
+            this.log(`Sell price triggered, persistence activated: ${this.persistence}`)
             this.emit('traderPersistenceTrigger', this.persistence)
             return this.persistence++
           }
