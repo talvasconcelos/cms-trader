@@ -5,7 +5,9 @@ config.API_SECRET = ''
 
 config.currency = 'BTC'
 
-config.telegram = false
+config.strategy = 'microtrades'
+
+config.telegram = true
 config.telegramAPI = ''
 
 module.exports = config

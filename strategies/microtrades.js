@@ -7,7 +7,7 @@ class Bot extends Trader {
   constructor(options){
     super(options)
     this._TP_p = 1.04
-    this._SL_p = 1.05
+    this._SL_p = 1.02
     this.targetPrice = null
     this.stopLoss = null
     this.persistence = 0
@@ -37,11 +37,11 @@ class Bot extends Trader {
         let diff = now - this._myorders.data.time
 
         if(diff > 900000 && !this._busy_executing){
-          this.log.info('Order up for: ', Utils.milliToMin(diff))
+          this.log('Order up for: ', Utils.milliToMin(diff))
           return this.cancelOrder(this.order_id)
         }
 
-        this.log.info(`(${this._is_selling ? 'Sell' : 'Buy'}) Diff: ${Utils.milliToMin(diff)}`)
+        this.log(`(${this._is_selling ? 'Sell' : 'Buy'}) Diff: ${Utils.milliToMin(diff)}`)
       })
       return
     }
@@ -55,7 +55,7 @@ class Bot extends Trader {
         this._initial_prices = true
         return
       }
-      this.log.info(`\nLast Price: ${this.last_price}\nBuy Price: ${this.buyPrice}\nSell Price: ${this.sellPrice.toFixed(8)}\nStop Loss: ${this.stopLoss.toFixed(8)}\nTarget Price: ${this.targetPrice.toFixed(8)}\n`)
+      this.log(`\nLast Price: ${this.last_price}\nBuy Price: ${this.buyPrice}\nSell Price: ${this.sellPrice.toFixed(8)}\nStop Loss: ${this.stopLoss.toFixed(8)}\nTarget Price: ${this.targetPrice.toFixed(8)}\n`)
       // log(`Last Price: ${this.last_price}`.cyan)
       // log(`Buy Price: ${this.buyPrice}`.red)
       // log(`Sell Price: ${this.sellPrice.toFixed(8)}`.green)
@@ -65,20 +65,20 @@ class Bot extends Trader {
         if(this.last_price > this.targetPrice){
           this.sellPrice = this.targetPrice
           this.targetPrice *= this._TP_p
-          this.log.info('Sell price updated:'.green, this.sellPrice)
+          this.log('Sell price updated:'.green, this.sellPrice)
           return
         }
         if(this.last_price <= this.stopLoss){
-          this.log.info('Stop Loss trigered. Selling!'.red)
+          this.log('Stop Loss trigered. Selling!')
           return this.sell()
         }
         if(this.last_price <= this.sellPrice){
           if(this.persistence <= 3) {
-            this.log.info(`Sell price triggered, persistence activated: ${this.persistence}`.cyan)
+            this.log(`Sell price triggered, persistence activated: ${this.persistence}`n)
             this.emit('traderPersistenceTrigger', this.persistence)
             return this.persistence++
           }
-          this.log.info('Selling!'.green)
+          this.log('Selling!')
           this.persistence = 0
           this.emit('traderSelling', this.sellPrice)
           return this.sell(this.sellPrice)

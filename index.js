@@ -31,26 +31,29 @@ cmsWS.on('message', (msg) => {
       return
     }
     const data = JSON.parse(msg)
-    const regex = new RegExp("/(" + config.currency +")$/g")
+    const regex = new RegExp(/(BTC)$/g)
     if (data.hasOwnProperty('to') && data.to == 'trader'){
         const pair = data.data.sort((a, b) => {
             return b.prob - a.prob
         }).filter(p => (regex).test(p.pair))
-        if(!pair.length) {
+        console.log(pair)
+        if(pair.length === 0) {
+          console.log(new Date())
           console.log('No pairs to trade!')
           return
         }
         // console.log(pair, data.timestamp)
         let now = Date.now()
         let diff = new Date(now - data.timestamp).getMinutes()
-        if(pair[0].pair && diff < 6){
+        if(pair[0].pair && diff < 10){
             bot = new Trader({
               client,
               base: config.currency,
               websocket
             })
             return bot.start_trading({
-                pair: pair[0].pair
+                pair: pair[0].pair,
+                time: 20000
             })
         }
     }

@@ -5,6 +5,7 @@ const Utils = require('./utils')
 
 class Trader extends EventEmitter{
     constructor(opts) {
+        super(opts)
         this._test = true
         this._busy_executing = false
         this._is_buying = false
@@ -78,8 +79,8 @@ class Trader extends EventEmitter{
         }
     }
 
-    init_market() {
-        let market = client.exchangeInfo().then(res => {
+    async init_market() {
+        let market = await this.client.exchangeInfo().then(res => {
             return res.symbols.find(m => m.symbol === this.product.toUpperCase())
         })
         this._asset = market.baseAsset
