@@ -16,7 +16,7 @@ const client = new api.BinanceRest({
 const websocket = new api.BinanceWS()
 if(config.telegram){
   const Slimbot = require('slimbot');
-  const slimbot = new Slimbot('477843190:AAGqOjf_OmItpx7uUoxCfo0fD79nKDrFRuM')
+  const slimbot = new Slimbot(config.telegramAPI)
   slimbot.startPolling()
 }
 
