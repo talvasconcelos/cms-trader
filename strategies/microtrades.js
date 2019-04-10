@@ -6,8 +6,9 @@ const Trader = require('../trader')
 class Bot extends Trader {
   constructor(options){
     super(options)
-    this._TP_p = 1.04
+    this._TP_p = 1.025
     this._SL_p = 1.02
+    this._TRAIL_p = 1.005
     this.targetPrice = null
     this.stopLoss = null
     this.persistence = 0
@@ -34,9 +35,9 @@ class Bot extends Trader {
       this._retry++
       this.chekOrder().then(res => {
         let now = Date.now()
-        let diff = now - this._myorders.data.time
+        let diff = now - this._myorders.data.transactTime
 
-        if(diff > 900000 && !this._busy_executing){
+        if(diff > 300000 && !this._busy_executing){
           this.log('Order up for: ', Utils.milliToMin(diff))
           return this.cancelOrder(this.order_id)
         }
@@ -55,7 +56,7 @@ class Bot extends Trader {
         this._initial_prices = true
         return
       }
-      this.log(`\nLast Price: ${this.last_price}\nBuy Price: ${this.buyPrice}\nSell Price: ${this.sellPrice.toFixed(8)}\nStop Loss: ${this.stopLoss.toFixed(8)}\nTarget Price: ${this.targetPrice.toFixed(8)}\n`)
+      this.log(`\nPair: ${this._asset} ${new Date().toTimeString()}\nLast Price: ${this.last_price}\nBuy Price: ${this.buyPrice}\nSell Price: ${this.sellPrice.toFixed(8)}\nStop Loss: ${this.stopLoss.toFixed(8)}\nTarget Price: ${this.targetPrice.toFixed(8)}\n`)
       // log(`Last Price: ${this.last_price}`.cyan)
       // log(`Buy Price: ${this.buyPrice}`.red)
       // log(`Sell Price: ${this.sellPrice.toFixed(8)}`.green)
@@ -63,14 +64,14 @@ class Bot extends Trader {
       // log(`Target Price: ${this.targetPrice.toFixed(8)}`.green)
       if(!this._is_selling){
         if(this.last_price > this.targetPrice){
-          this.sellPrice = this.targetPrice
+          this.sellPrice = this.targetPrice / this._TRAIL_p
           this.targetPrice *= this._TP_p
-          this.log('Sell price updated:'.green, this.sellPrice)
+          this.log('Sell price updated:', this.sellPrice)
           return
         }
         if(this.last_price <= this.stopLoss){
           this.log('Stop Loss trigered. Selling!')
-          return this.sell()
+          return this.sellMarket()
         }
         if(this.last_price <= this.sellPrice){
           if(this.persistence <= 3) {
@@ -81,7 +82,7 @@ class Bot extends Trader {
           this.log('Selling!')
           this.persistence = 0
           this.emit('traderSelling', this.sellPrice)
-          return this.sell(this.sellPrice)
+          return this.sell()
         }
         this.persistence > 0 ? this.persistence = 0 : null
       }

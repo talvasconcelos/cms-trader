@@ -133,6 +133,7 @@ class Trader extends EventEmitter{
                 .then((res) => {
                     console.log('Start trading res', res)
                     if (res !== false) {
+                        this.emit('traderStart')
                         timer.start()
                     }
                 })
@@ -159,6 +160,7 @@ class Trader extends EventEmitter{
         return cancel.then(() => {
             this._timer.stop()
             console.log('Trader stopped!')
+            this.emit('traderStop')
             return Promise.resolve()
         })
     }
@@ -175,7 +177,6 @@ class Trader extends EventEmitter{
     addOrder(options) {
         let self = this
         console.log('Trying to', options.side.toLowerCase() + ':', options.quantity, this._asset, 'at', options.price)
-        
         this.client.newOrder({
             symbol: self.product || self.asset + self.base,
             side: options.side,
@@ -240,6 +241,7 @@ class Trader extends EventEmitter{
                         self._myorders.data = data
                         self._is_buying = false
                         self.buyPrice = self._myorders.data.price
+                        self.fetch_balances()
                         //self.start_trading()
                     }
 
@@ -306,8 +308,8 @@ class Trader extends EventEmitter{
             return false
         }
         let price = Utils.roundToNearest(this._retry > 3 ? this.ticker.data.askPrice : this.last_price, this._tickSize)
-        // let qty = Utils.roundToNearest((this.base_balance / price), this._minQty)
-        let qty = Utils.roundToNearest((0.0012 / price), this._minQty)
+        let qty = Utils.roundToNearest((this.base_balance / price), this._minQty)
+        // let qty = Utils.roundToNearest((0.0012 / price), this._minQty)
         if (price * qty < this._minOrder) {
             console.error('Minimum order must be', this._minOrder + '.')
             return false
@@ -330,6 +332,16 @@ class Trader extends EventEmitter{
         })
     }
 
+    sellMarket() {
+        let qty = Utils.roundToNearest(this.asset_balance, this._minQty)
+        return this.addOrder({
+            side: 'SELL',
+            quantity: qty,
+            type: 'MARKET',
+            timeInForce: 'GTC'
+        })
+    }
+
     fetch_balances() {
         console.log('starting fetch_balances')
         let self = this
@@ -341,7 +353,7 @@ class Trader extends EventEmitter{
                 .then(data => {
                     if (self.product)
                         self._tradebalance.base = data.balances.find(b => b.asset === self._base).free
-                    self._tradebalance.asset = data.balances.find(b => b.asset === self._asset).free
+                        self._tradebalance.asset = data.balances.find(b => b.asset === self._asset).free
                     resolve(data)
                 })
                 .catch(err => console.error(err))
