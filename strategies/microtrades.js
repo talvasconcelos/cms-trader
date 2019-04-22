@@ -6,7 +6,8 @@ const Trader = require('../trader')
 class Bot extends Trader {
   constructor(options){
     super(options)
-    this._TP_p = 1.025
+    this.TP = 1.1
+    this._TP_p = 1.03
     this._SL_p = 1.02
     this._TRAIL_p = 1.005
     this.targetPrice = null
@@ -15,7 +16,14 @@ class Bot extends Trader {
     // this.updatedPrice = this.buyPrice * this._TP_p
   }
 
+  forcePriceUpdate(interval){
+    setInterval(() => {
+      this.listen_to_messages()
+    }, interval)
+  }
+
   _execute_trading_strategy() {
+    this.forcePriceUpdate(3600000)
     if(!this.last_price){
       this.listen_to_messages()
     }
@@ -63,6 +71,10 @@ class Bot extends Trader {
       // log(`Stop Loss: ${this.stopLoss.toFixed(8)}`.red)
       // log(`Target Price: ${this.targetPrice.toFixed(8)}`.green)
       if(!this._is_selling){
+        if(this.last_price > this.buyPrice * this.TP){
+          this.log('Top target achieved. Selling!')
+          return this.sellMarket()
+        }
         if(this.last_price > this.targetPrice){
           this.sellPrice = this.targetPrice / this._TRAIL_p
           this.targetPrice *= this._TP_p
@@ -82,7 +94,7 @@ class Bot extends Trader {
           this.log('Selling!')
           this.persistence = 0
           this.emit('traderSelling', this.sellPrice)
-          return this.sell()
+          return this.sellMarket()
         }
         this.persistence > 0 ? this.persistence = 0 : null
       }

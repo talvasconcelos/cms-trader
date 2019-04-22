@@ -1,14 +1,10 @@
 const WebSocket = require('ws')
 const api = require('binance')
+const Utils = require('./utils')
 const config = require('./config')
 const Trader = require(`./strategies/${config.strategy}`)
-const Slimbot = require('slimbot')
 
-if(config.telegram){
-  const slimbot = new Slimbot(config.telegramAPI)
-  slimbot.startPolling()
-  slimbot.sendMessage(config.telegramUserID, `Trader Started!`, {parse_mode: 'Markdown'}).catch(console.error)
-}
+const slimbot = Utils.telegram(config.telegramAPI)
 
 const cmsWS = new WebSocket('wss://market-scanner.herokuapp.com')
 const client = new api.BinanceRest({
@@ -22,8 +18,13 @@ const client = new api.BinanceRest({
 
 const websocket = new api.BinanceWS()
 
+const bot = new Trader({
+  client,
+  base: config.currency,
+  websocket
+})
 
-let bot
+slimbot.sendMessage(config.telegramUserID, `Trader Started!`, {parse_mode: 'Markdown'}).catch(console.error)
 
 cmsWS.on('open', () => {console.log(`Connected to CMS`)})
 cmsWS.on('close', () => {console.log(`Lost connection!!`)})
@@ -45,59 +46,51 @@ cmsWS.on('message', (msg) => {
         console.log('No pairs to trade!')
         return
       }
+      if(pair[0].pair === 'BNBBTC'){
+        pair.shift()
+      }
       // console.log(pair, data.timestamp)
       let now = Date.now()
       let diff = new Date(now - data.timestamp).getMinutes()
-      if(pair[0].pair && diff < 20){          
-        return startTrading(pair[0].pair)
+      if(pair[0].pair && diff < 15){          
+        return bot.start_trading({pair: pair[0].pair, time: 30000})
       }
     }
     return
 })
 
-if(typeof bot != 'undefined' && config.telegram){
+bot.on('traderStart', () => {
+  if(bot.buyPrice){
+    const telegramInt = setInterval(() => {
+      let msg = `*${bot.product}*
+      *Last Price:* ${bot.last_price}
+      *Buy Price:* ${bot.buyPrice}
+      *Sell Price:* ${bot.sellPrice.toFixed(8)}
+      *Stop Loss:* ${bot.stopLoss.toFixed(8)}
+      *Target Price:* ${bot.targetPrice.toFixed(8)}`
+      slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
+    }, 1800000)
+    telegramInt()
+  }
+})
 
-  bot.on('traderStart', () => {
-    if(bot.buyPrice){
-      const telegramInt = setInterval(() => {
-        let msg = `*${bot.product}*
-        *Last Price:* ${bot.last_price}
-        *Buy Price:* ${bot.buyPrice}
-        *Sell Price:* ${bot.sellPrice.toFixed(8)}
-        *Stop Loss:* ${bot.stopLoss.toFixed(8)}
-        *Target Price:* ${bot.targetPrice.toFixed(8)}`
-        slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
-      }, 1800000)
-    }
-  })
+bot.on('traderStop', (msg) => {
+  clearInterval(telegramInt)
+})
 
-  bot.on('traderStop', (msg) => {
-    clearInterval(telegramInt)
-  })
+bot.on('traderCheckOrder', (msg) => {
+  slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
+})
 
-  bot.on('traderCheckOrder', (msg) => {
-    slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
-  })
+bot.on('traderPersistenceTrigger', (persistence) => {
+  let msg = `Sell price triggered, persistence activated: ${this.persistence}!`
+  slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
+})
+bot.on('traderSelling', (price) => {
+  let msg = `Trying to sell ${bot._asset} for ${price}!`
+  slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
+})
 
-  bot.on('traderPersistenceTrigger', (persistence) => {
-    let msg = `Sell price triggered, persistence activated: ${this.persistence}!`
-    slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
-  })
-  bot.on('traderSelling', (price) => {
-    let msg = `Trying to sell ${bot._asset} for ${price}!`
-    slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
-  })
-}
-
-function startTrading(pair) {
-  bot = new Trader({
-    client,
-    base: config.currency,
-    websocket
-  })
-
-  return bot.start_trading({ pair, time: 30000 })
-}
 
 /*
 { symbol: 'STORJETH',

@@ -177,16 +177,21 @@ class Trader extends EventEmitter{
     addOrder(options) {
         let self = this
         console.log('Trying to', options.side.toLowerCase() + ':', options.quantity, this._asset, 'at', options.price)
-        this.client.newOrder({
+        const order = {
             symbol: self.product || self.asset + self.base,
             side: options.side,
             type: options.type || 'LIMIT',
-            price: options.price,
+            price: options.price || '',
             timeInForce: options.timeInForce || 'FOK',
             quantity: options.quantity,
             // newClientOrderId: this.clientOrderId,
             timestamp: new Date().getTime()
-        })
+        }
+        if(options.type === 'MARKET'){
+            delete order.price
+            delete order.timeInForce
+        }
+        this.client.newOrder(order)
             .then(data => {
                 //console.log(data)
                 data.side === 'BUY' ? self._is_buying = true : self._is_selling = true
@@ -250,15 +255,16 @@ class Trader extends EventEmitter{
                         self.buy()
                     }
                 }
-
-                console.log(`Side: ${data.side}
-        Status: ${data.status}
-        OrderID: ${self._order_id}
-        State:
-        buying: ${self._is_buying}
-        selling: ${self._is_selling}
-        busy: ${self._busy_executing}
-        `)
+                let msg = `Side: ${data.side}
+                Status: ${data.status}
+                OrderID: ${self._order_id}
+                State:
+                buying: ${self._is_buying}
+                selling: ${self._is_selling}
+                busy: ${self._busy_executing}
+                `
+                this.emit('traderCheckOrder', msg)
+                console.log(msg)
                 //console.log(data)
                 return data
             })
@@ -322,7 +328,7 @@ class Trader extends EventEmitter{
     }
 
     sell() {
-        let price = Utils.roundToNearest((this.last_price - this._tickSize), this._tickSize)
+        let price = Utils.roundToNearest((this.last_price), this._tickSize)
         let qty = Utils.roundToNearest(this.asset_balance, this._minQty)
         return this.addOrder({
             side: 'SELL',

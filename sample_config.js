@@ -7,7 +7,8 @@ config.currency = 'BTC'
 
 config.strategy = 'microtrades'
 
-config.telegram = true
+config.telegram = false
 config.telegramAPI = ''
+config.telegramUserID = 0000000
 
 module.exports = config

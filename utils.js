@@ -1,4 +1,5 @@
 const fs = require('fs')
+const Slimbot = require('slimbot')
 
 let _config = false
 
@@ -45,6 +46,12 @@ const utils = {
     startTime.setSeconds(0)
     let startInMilli = startTime.getTime() - serverTime
     return startInMilli
+  },
+
+  telegram: (apikey) => {
+    const slimbot = new Slimbot(apikey)
+    slimbot.startPolling()
+    return slimbot
   }
 }
 
