@@ -181,13 +181,13 @@ class Trader extends EventEmitter{
             symbol: self.product || self.asset + self.base,
             side: options.side,
             type: options.type || 'LIMIT',
-            price: options.price || '',
+            price: options.price,
             timeInForce: options.timeInForce || 'FOK',
             quantity: options.quantity,
             // newClientOrderId: this.clientOrderId,
             timestamp: new Date().getTime()
         }
-        if(options.type === 'MARKET'){
+        if(options.side === 'SELL' && options.type === 'MARKET'){
             delete order.price
             delete order.timeInForce
         }
@@ -323,7 +323,7 @@ class Trader extends EventEmitter{
         return this.addOrder({
             side: 'BUY',
             quantity: qty,
-            price: price
+            price: price.toFixed(8)
         })
     }
 
@@ -333,7 +333,7 @@ class Trader extends EventEmitter{
         return this.addOrder({
             side: 'SELL',
             quantity: qty,
-            price: price,
+            price: price.toFixed(8),
             timeInForce: 'GTC'
         })
     }

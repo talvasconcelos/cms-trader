@@ -13,6 +13,7 @@ class Bot extends Trader {
     this.targetPrice = null
     this.stopLoss = null
     this.persistence = 0
+    this.startTime = Date.now()
     // this.updatedPrice = this.buyPrice * this._TP_p
   }
 
@@ -23,6 +24,9 @@ class Bot extends Trader {
   }
 
   _execute_trading_strategy() {
+    let now = Date.now()
+    let diff = new Date(now - this.startTime).getHours()
+    if(diff > 24){return this.sellMarket()}
     this.forcePriceUpdate(3600000)
     if(!this.last_price){
       this.listen_to_messages()

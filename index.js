@@ -3,8 +3,10 @@ const api = require('binance')
 const Utils = require('./utils')
 const config = require('./config')
 const Trader = require(`./strategies/${config.strategy}`)
+const args = process.argv.slice(2)
 
 const slimbot = Utils.telegram(config.telegramAPI)
+let telegramInt
 
 const cmsWS = new WebSocket('wss://market-scanner.herokuapp.com')
 const client = new api.BinanceRest({
@@ -26,13 +28,17 @@ const bot = new Trader({
 
 slimbot.sendMessage(config.telegramUserID, `Trader Started!`, {parse_mode: 'Markdown'}).catch(console.error)
 
+args.length && bot.start_trading({pair: args[0], time: 30000})
+
 cmsWS.on('open', () => {console.log(`Connected to CMS`)})
 cmsWS.on('close', () => {console.log(`Lost connection!!`)})
 
 cmsWS.on('message', (msg) => {
     const data = JSON.parse(msg)
-    const regex = new RegExp(/(BTC)$/g)
+    const regex = RegExp(/(BTC)$/g)
+    // const regex = RegExp('\\/(' + config.currency.toUpperCase() +')\\$\\/', 'g')
     if (data.hasOwnProperty('to') && data.to == 'trader'){
+      // console.log(data)
       if(bot && bot.is_trading){
         console.log(`Bot is trading!`)
         return
@@ -46,14 +52,16 @@ cmsWS.on('message', (msg) => {
         console.log('No pairs to trade!')
         return
       }
-      if(pair[0].pair === 'BNBBTC'){
-        pair.shift()
-      }
-      // console.log(pair, data.timestamp)
+      // if(pair[0].pair === 'BNBBTC'){
+      //   pair.shift()
+      // }
+      console.log(pair)
       let now = Date.now()
       let diff = new Date(now - data.timestamp).getMinutes()
-      if(pair[0].pair && diff < 15){          
+      if(pair[0].pair && diff < 15){
         return bot.start_trading({pair: pair[0].pair, time: 30000})
+      } else {
+        console.log(`Signal is outdated! Sent ${diff} minutes ago!`)
       }
     }
     return
@@ -61,7 +69,7 @@ cmsWS.on('message', (msg) => {
 
 bot.on('traderStart', () => {
   if(bot.buyPrice){
-    const telegramInt = setInterval(() => {
+    telegramInt = setInterval(() => {
       let msg = `*${bot.product}*
       *Last Price:* ${bot.last_price}
       *Buy Price:* ${bot.buyPrice}
