@@ -38,7 +38,7 @@ cmsWS.on('message', (msg) => {
     const regex = RegExp(/(BTC)$/g)
     // const regex = RegExp('\\/(' + config.currency.toUpperCase() +')\\$\\/', 'g')
     if (data.hasOwnProperty('to') && data.to == 'trader'){
-      // console.log(data)
+      console.log(data)
       if(bot && bot.is_trading){
         console.log(`Bot is trading!`)
         return
@@ -68,22 +68,23 @@ cmsWS.on('message', (msg) => {
 })
 
 bot.on('traderStart', () => {
-  if(bot.buyPrice){
-    telegramInt = setInterval(() => {
-      let msg = `*${bot.product}*
-      *Last Price:* ${bot.last_price}
-      *Buy Price:* ${bot.buyPrice}
-      *Sell Price:* ${bot.sellPrice.toFixed(8)}
-      *Stop Loss:* ${bot.stopLoss.toFixed(8)}
-      *Target Price:* ${bot.targetPrice.toFixed(8)}`
-      slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
-    }, 1800000)
-    telegramInt()
-  }
+  let msg = `Bought ${bot._asset} at ${bot.buyPrice}`
+  slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
 })
 
-bot.on('traderStop', (msg) => {
-  clearInterval(telegramInt)
+bot.on('tradeInfo', () => {
+  let msg = `*${bot.product}*
+  *Last Price:* ${bot.last_price}
+  *Buy Price:* ${bot.buyPrice}
+  *Sell Price:* ${bot.sellPrice.toFixed(8)}
+  *Stop Loss:* ${bot.stopLoss.toFixed(8)}
+  *Target Price:* ${bot.targetPrice.toFixed(8)}`
+  slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
+})
+
+bot.on('traderInfoStop', (msg) => {
+  let msg = `${bot._asset} trade ended!`
+  slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
 })
 
 bot.on('traderCheckOrder', (msg) => {

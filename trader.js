@@ -96,6 +96,19 @@ class Trader extends EventEmitter{
         this._tradebalance = { updated: undefined, base: undefined, asset: undefined, errors: [] }
     }
 
+    telegramInfoStart(options) {
+        options = options || {}
+        let time = options.time || 1800000
+        this._telegramInfo = setInterval(() => {
+            this.emit('tradeInfo')
+        }, time)
+    }
+
+    telegramInfoStop() {
+        clearInterval(this._telegramInfo)
+        this.emit('tradeInfoStop')
+    }
+
     /**
      * Starts trading with the bot.
      * @param options
@@ -133,8 +146,9 @@ class Trader extends EventEmitter{
                 .then((res) => {
                     console.log('Start trading res', res)
                     if (res !== false) {
-                        this.emit('traderStart')
                         timer.start()
+                        this.emit('traderStart')
+                        this.telegramInfoStart()
                     }
                 })
                 .catch(err => {
@@ -160,7 +174,7 @@ class Trader extends EventEmitter{
         return cancel.then(() => {
             this._timer.stop()
             console.log('Trader stopped!')
-            this.emit('traderStop')
+            this.telegramInfoStop()
             return Promise.resolve()
         })
     }
@@ -255,14 +269,14 @@ class Trader extends EventEmitter{
                         self.buy()
                     }
                 }
-                let msg = `Side: ${data.side}
+                let msg = `
+                Side: ${data.side}: ${this.product}
                 Status: ${data.status}
                 OrderID: ${self._order_id}
-                State:
                 buying: ${self._is_buying}
                 selling: ${self._is_selling}
-                busy: ${self._busy_executing}
-                `
+                busy: ${self._busy_executing}`
+
                 this.emit('traderCheckOrder', msg)
                 console.log(msg)
                 //console.log(data)
