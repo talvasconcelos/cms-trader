@@ -149,6 +149,8 @@ class Trader extends EventEmitter{
                         timer.start()
                         this.emit('traderStart')
                         this.telegramInfoStart()
+                    } else {
+                        this.stop_trading()
                     }
                 })
                 .catch(err => {
@@ -332,6 +334,9 @@ class Trader extends EventEmitter{
         // let qty = Utils.roundToNearest((0.0012 / price), this._minQty)
         if (price * qty < this._minOrder) {
             console.error('Minimum order must be', this._minOrder + '.')
+            return false
+        }
+        if(price < 0.00000999){
             return false
         }
         return this.addOrder({

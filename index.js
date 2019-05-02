@@ -68,7 +68,7 @@ cmsWS.on('message', (msg) => {
 })
 
 bot.on('traderStart', () => {
-  let msg = `Bought ${bot._asset} at ${bot.buyPrice}`
+  let msg = `Buying ${bot._asset}.`
   slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
 })
 
@@ -82,7 +82,7 @@ bot.on('tradeInfo', () => {
   slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
 })
 
-bot.on('traderInfoStop', (msg) => {
+bot.on('traderInfoStop', () => {
   let msg = `${bot._asset} trade ended!`
   slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
 })
