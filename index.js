@@ -8,6 +8,8 @@ const args = process.argv.slice(2)
 const slimbot = Utils.telegram(config.telegramAPI)
 let telegramInt
 
+let CACHE
+
 const cmsWS = new WebSocket('wss://market-scanner.herokuapp.com')
 const client = new api.BinanceRest({
     key: config.API_KEY, // Get this from your account on binance.com
@@ -35,37 +37,42 @@ cmsWS.on('close', () => {console.log(`Lost connection!!`)})
 
 cmsWS.on('message', (msg) => {
     const data = JSON.parse(msg)
-    const regex = RegExp(/(BTC)$/g)
-    // const regex = RegExp('\\/(' + config.currency.toUpperCase() +')\\$\\/', 'g')
-    if (data.hasOwnProperty('to') && data.to == 'trader'){
-      console.log(data)
-      if(bot && bot.is_trading){
-        console.log(`Bot is trading!`)
-        return
-      }
-      const pair = data.data.sort((a, b) => {
-          return b.prob - a.prob
-      }).filter(p => (regex).test(p.pair))
-      console.log(pair)
-      if(pair.length === 0) {
-        console.log(new Date())
-        console.log('No pairs to trade!')
-        return
-      }
-      // if(pair[0].pair === 'BNBBTC'){
-      //   pair.shift()
-      // }
-      console.log(pair)
-      let now = Date.now()
-      let diff = new Date(now - data.timestamp).getMinutes()
-      if(pair[0].pair && diff < 15){
-        return bot.start_trading({pair: pair[0].pair, time: 30000})
-      } else {
-        console.log(`Signal is outdated! Sent ${diff} minutes ago!`)
-      }
-    }
-    return
+    CACHE = data
+    return startTrader(data)
 })
+
+const startTrader = (data) => {
+  const regex = RegExp(/(BTC)$/g)
+  // const regex = RegExp('\\/(' + config.currency.toUpperCase() +')\\$\\/', 'g')
+  if (data.hasOwnProperty('to') && data.to == 'trader'){
+    console.log(data)
+    if(bot && bot.is_trading){
+      console.log(`Bot is trading!`)
+      return
+    }
+    const pair = data.data.sort((a, b) => {
+        return b.prob - a.prob
+    }).filter(p => (regex).test(p.pair))
+    console.log(pair)
+    if(pair.length === 0) {
+      console.log(new Date())
+      console.log('No pairs to trade!')
+      return
+    }
+    // if(pair[0].pair === 'BNBBTC'){
+    //   pair.shift()
+    // }
+    console.log(pair)
+    let now = Date.now()
+    let diff = new Date(now - data.timestamp).getMinutes()
+    if(pair[0].pair && diff < 15){
+      bot.start_trading({pair: pair[0].pair, time: 3e+6}).catch(console.error)
+    } else {
+      console.log(`Signal is outdated! Sent ${diff} minutes ago!`)
+    }
+  }
+  return
+}
 
 bot.on('traderStart', () => {
   let msg = `Buying ${bot._asset}.`
@@ -82,9 +89,10 @@ bot.on('tradeInfo', () => {
   slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
 })
 
-bot.on('traderInfoStop', () => {
+bot.on('tradeInfoStop', () => {
   let msg = `${bot._asset} trade ended!`
   slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
+  return startTrader(CACHE)
 })
 
 bot.on('traderCheckOrder', (msg) => {

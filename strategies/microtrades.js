@@ -6,9 +6,9 @@ const Trader = require('../trader')
 class Bot extends Trader {
   constructor(options){
     super(options)
-    this.TP = 1.1
+    this.TP = 1.2
     this._TP_p = 1.03
-    this._SL_p = 1.02
+    this._SL_p = 1.025
     this._TRAIL_p = 1.005
     this.targetPrice = null
     this.stopLoss = null
@@ -30,6 +30,10 @@ class Bot extends Trader {
     this.forcePriceUpdate(3600000)
     if(!this.last_price){
       this.listen_to_messages()
+    }
+
+    if(this._retry > 3){
+      return this.stop_trading()
     }
 
     // if(this._is_buying || this._is_selling){
@@ -56,7 +60,6 @@ class Bot extends Trader {
 
         this.log(`(${this._is_selling ? 'Sell' : 'Buy'}) Diff: ${Utils.milliToMin(diff)}`)
       })
-      return
     }
 
     //console.log(this.buyPrice, this.sellPrice, this.last_price)

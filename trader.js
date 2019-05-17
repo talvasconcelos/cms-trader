@@ -91,14 +91,29 @@ class Trader extends EventEmitter{
     }
 
     init_state() {
-        this._ticker = { updated: undefined, data: undefined, errors: [] }
-        this._myorders = { updated: undefined, data: undefined, errors: [] }
-        this._tradebalance = { updated: undefined, base: undefined, asset: undefined, errors: [] }
+        this._ticker = { updated: null, data: null, errors: [] }
+        this._myorders = { updated: null, data: null, errors: [] }
+        this._tradebalance = { updated: null, base: null, asset: null, errors: [] }
+    }
+
+    stateReset() {
+        this._busy_executing = false
+        this._is_buying = false
+        this._is_selling = false
+        this._is_trading = false
+        this._retry = 0
+        this.product = null
+        this.buyPrice = false
+        this.sellPrice = false
+        this.targetPrice = null
+        this.stopLoss = null
+        this.persistence = 0
+        this._initial_prices = false
     }
 
     telegramInfoStart(options) {
         options = options || {}
-        let time = options.time || 1800000
+        let time = options.time || 1.8e+6
         this._telegramInfo = setInterval(() => {
             this.emit('tradeInfo')
         }, time)
@@ -149,8 +164,10 @@ class Trader extends EventEmitter{
                         timer.start()
                         this.emit('traderStart')
                         this.telegramInfoStart()
+                        return resolve(true)
                     } else {
                         this.stop_trading()
+                        return resolve(false)
                     }
                 })
                 .catch(err => {
@@ -175,6 +192,7 @@ class Trader extends EventEmitter{
         let cancel = options.cancel ? self.cancel_order() : Promise.resolve()
         return cancel.then(() => {
             this._timer.stop()
+            this.stateReset()
             console.log('Trader stopped!')
             this.telegramInfoStop()
             return Promise.resolve()
@@ -257,6 +275,9 @@ class Trader extends EventEmitter{
                 }
 
                 if (data.side === 'BUY') {
+                    if(filled) {
+                        this._tradebalance.asset = +data.executedQty
+                    }
                     if (!stillThere && !canceledManually) {
                         self._myorders.updated = new Date()
                         self._myorders.data = data
@@ -275,6 +296,8 @@ class Trader extends EventEmitter{
                 Side: ${data.side}: ${this.product}
                 Status: ${data.status}
                 OrderID: ${self._order_id}
+                Price: ${data.price}
+                Qty: ${data.executedQty}/${data.origQty}
                 buying: ${self._is_buying}
                 selling: ${self._is_selling}
                 busy: ${self._busy_executing}`
@@ -330,8 +353,8 @@ class Trader extends EventEmitter{
             return false
         }
         let price = Utils.roundToNearest(this._retry > 3 ? this.ticker.data.askPrice : this.last_price, this._tickSize)
-        let qty = Utils.roundToNearest((this.base_balance / price), this._minQty)
-        // let qty = Utils.roundToNearest((0.0012 / price), this._minQty)
+        // let qty = Utils.roundToNearest((this.base_balance / price), this._minQty)
+        let qty = Utils.roundToNearest((0.0012 / price), this._minQty)
         if (price * qty < this._minOrder) {
             console.error('Minimum order must be', this._minOrder + '.')
             return false
@@ -378,7 +401,7 @@ class Trader extends EventEmitter{
                 .then(data => {
                     if (self.product)
                         self._tradebalance.base = data.balances.find(b => b.asset === self._base).free
-                        self._tradebalance.asset = data.balances.find(b => b.asset === self._asset).free
+                        self._tradebalance.asset = Math.min(this._tradebalance.asset, data.balances.find(b => b.asset === self._asset).free)
                     resolve(data)
                 })
                 .catch(err => console.error(err))
