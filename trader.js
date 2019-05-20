@@ -354,12 +354,13 @@ class Trader extends EventEmitter{
         }
         let price = Utils.roundToNearest(this._retry > 3 ? this.ticker.data.askPrice : this.last_price, this._tickSize)
         // let qty = Utils.roundToNearest((this.base_balance / price), this._minQty)
-        let qty = Utils.roundToNearest((0.0012 / price), this._minQty)
+        let qty = Utils.roundToNearest((0.002 / price), this._minQty)
         if (price * qty < this._minOrder) {
             console.error('Minimum order must be', this._minOrder + '.')
             return false
         }
-        if(price < 0.00000999){
+        if(price < 0.00000099){
+            console.log('Price too low!')
             return false
         }
         return this.addOrder({

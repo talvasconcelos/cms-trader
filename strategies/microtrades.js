@@ -8,7 +8,7 @@ class Bot extends Trader {
     super(options)
     this.TP = 1.2
     this._TP_p = 1.03
-    this._SL_p = 1.025
+    this._SL_p = 1.04
     this._TRAIL_p = 1.005
     this.targetPrice = null
     this.stopLoss = null
@@ -65,8 +65,8 @@ class Bot extends Trader {
     //console.log(this.buyPrice, this.sellPrice, this.last_price)
     if(this.is_trading){
       if(!this._initial_prices){
-        this.targetPrice = this.buyPrice * this._TP_p
-        this.stopLoss = this.buyPrice / this._SL_p
+        this.targetPrice = Utils.roundToNearest(this.buyPrice * this._TP_p, this._tickSize)
+        this.stopLoss = Utils.roundToNearest(this.buyPrice / this._SL_p, this._tickSize)
         this.sellPrice = this.stopLoss
         this._initial_prices = true
         return
@@ -83,7 +83,7 @@ class Bot extends Trader {
           return this.sellMarket()
         }
         if(this.last_price > this.targetPrice){
-          this.sellPrice = this.targetPrice / this._TRAIL_p
+          this.sellPrice = Utils.roundToNearest(this.targetPrice / this._TRAIL_p, this._tickSize)
           this.targetPrice *= this._TP_p
           this.log('Sell price updated:', this.sellPrice)
           return

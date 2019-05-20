@@ -30,7 +30,7 @@ const bot = new Trader({
 
 slimbot.sendMessage(config.telegramUserID, `Trader Started!`, {parse_mode: 'Markdown'}).catch(console.error)
 
-args.length && bot.start_trading({pair: args[0], time: 30000})
+args.length && bot.start_trading({pair: args[0], time: 60000})
 
 cmsWS.on('open', () => {console.log(`Connected to CMS`)})
 cmsWS.on('close', () => {console.log(`Lost connection!!`)})
@@ -66,7 +66,7 @@ const startTrader = (data) => {
     let now = Date.now()
     let diff = new Date(now - data.timestamp).getMinutes()
     if(pair[0].pair && diff < 15){
-      bot.start_trading({pair: pair[0].pair, time: 3e+6}).catch(console.error)
+      bot.start_trading({pair: pair[0].pair, time: 60000}).catch(console.error)
     } else {
       console.log(`Signal is outdated! Sent ${diff} minutes ago!`)
     }
@@ -83,9 +83,9 @@ bot.on('tradeInfo', () => {
   let msg = `*${bot.product}*
   *Last Price:* ${bot.last_price}
   *Buy Price:* ${bot.buyPrice}
-  *Sell Price:* ${bot.sellPrice.toFixed(8)}
-  *Stop Loss:* ${bot.stopLoss.toFixed(8)}
-  *Target Price:* ${bot.targetPrice.toFixed(8)}`
+  *Sell Price:* ${bot.sellPrice}
+  *Stop Loss:* ${bot.stopLoss}
+  *Target Price:* ${bot.targetPrice}`
   slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
 })
 
