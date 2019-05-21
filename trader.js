@@ -159,8 +159,8 @@ class Trader extends EventEmitter{
                     return await self.buy()
                 })
                 .then((res) => {
-                    console.log('Start trading res', res)
                     if (res !== false) {
+                        console.log('Started trading!')
                         timer.start()
                         this.emit('traderStart')
                         this.telegramInfoStart()
@@ -216,7 +216,7 @@ class Trader extends EventEmitter{
             side: options.side,
             type: options.type || 'LIMIT',
             price: options.price,
-            timeInForce: options.timeInForce || 'FOK',
+            timeInForce: options.timeInForce || 'GTC',
             quantity: options.quantity,
             // newClientOrderId: this.clientOrderId,
             timestamp: new Date().getTime()
@@ -232,6 +232,7 @@ class Trader extends EventEmitter{
                 self._myorders.updated = new Date()
                 self._myorders.data = data
                 self._order_id = data.orderId
+                this._busy_executing = true
                 return true
             })
             .catch(err => {
@@ -264,12 +265,9 @@ class Trader extends EventEmitter{
                         self.stop_trading()
                     }
 
-                    if (data.status === 'PARTIALLY_FILLED') {
-                        self._busy_executing = true
-                    }
-
                     if (canceledManually) {
                         self._is_selling = false
+                        this._busy_executing = false
                         self.sell()
                     }
                 }
@@ -277,6 +275,7 @@ class Trader extends EventEmitter{
                 if (data.side === 'BUY') {
                     if(filled) {
                         this._tradebalance.asset = +data.executedQty
+                        this._busy_executing = false
                     }
                     if (!stillThere && !canceledManually) {
                         self._myorders.updated = new Date()
@@ -292,8 +291,7 @@ class Trader extends EventEmitter{
                         self.buy()
                     }
                 }
-                let msg = `
-                Side: ${data.side}: ${this.product}
+                let msg = `${data.side}: ${this.product}
                 Status: ${data.status}
                 OrderID: ${self._order_id}
                 Price: ${data.price}
@@ -340,7 +338,7 @@ class Trader extends EventEmitter{
             })
     }
 
-    buy() {
+    buy() {        
         if (!this.product) {
             console.error('No pair specified!')
             return false
