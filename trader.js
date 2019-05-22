@@ -106,6 +106,7 @@ class Trader extends EventEmitter{
         this.buyPrice = false
         this.sellPrice = false
         this.targetPrice = null
+        this.last_price = null
         this.stopLoss = null
         this.persistence = 0
         this._initial_prices = false
