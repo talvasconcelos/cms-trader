@@ -109,6 +109,8 @@ class Trader extends EventEmitter{
         this.stopLoss = null
         this.persistence = 0
         this._initial_prices = false
+        this._timer = null
+        this.product = null
     }
 
     telegramInfoStart(options) {
