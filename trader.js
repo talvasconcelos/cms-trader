@@ -371,7 +371,7 @@ class Trader extends EventEmitter{
             quantity: qty,
             price: price.toFixed(8)
         }
-        opts.market && order.type = 'MARKET'
+        if(opts.market){order.type = 'MARKET'}
         return this.addOrder(order)
     }
 
