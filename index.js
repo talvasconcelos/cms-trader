@@ -45,7 +45,7 @@ const startTrader = (data) => {
   const regex = RegExp(/(BTC)$/g)
   // const regex = RegExp('\\/(' + config.currency.toUpperCase() +')\\$\\/', 'g')
   if (data.hasOwnProperty('to') && data.to == 'trader'){
-    console.log(data)
+    // console.log(data)
     if(bot && bot.is_trading){
       console.log(`Bot is trading!`)
       return
@@ -53,7 +53,7 @@ const startTrader = (data) => {
     const pair = data.data.sort((a, b) => {
         return b.prob - a.prob
     }).filter(p => (regex).test(p.pair))
-    console.log(pair)
+    // console.log(pair)
     if(pair.length === 0) {
       console.log(new Date())
       console.log('No pairs to trade!')
