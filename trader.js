@@ -219,12 +219,12 @@ class Trader extends EventEmitter{
             side: options.side,
             type: options.type || 'LIMIT',
             price: options.price,
-            timeInForce: options.timeInForce || 'GTC',
+            timeInForce: options.timeInForce || 'FOK',
             quantity: options.quantity,
             // newClientOrderId: this.clientOrderId,
             timestamp: new Date().getTime()
         }
-        if(options.side === 'SELL' && options.type === 'MARKET'){
+        if(options.type === 'MARKET'){
             delete order.price
             delete order.timeInForce
         }
@@ -341,7 +341,8 @@ class Trader extends EventEmitter{
             })
     }
 
-    buy() {        
+    buy(opts) {
+        opts = opts || {}
         if (!this.product) {
             console.error('No pair specified!')
             return false
@@ -364,11 +365,14 @@ class Trader extends EventEmitter{
             console.log('Price too low!')
             return false
         }
-        return this.addOrder({
+
+        const order = {
             side: 'BUY',
             quantity: qty,
             price: price.toFixed(8)
-        })
+        }
+        opts.market && order.type = 'MARKET'
+        return this.addOrder(order)
     }
 
     sell() {
