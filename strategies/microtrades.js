@@ -33,7 +33,7 @@ class Bot extends Trader {
     }
 
     if(this._retry > 3){
-      this.cancelOrder(this.order_id)
+      //this.cancelOrder(this.order_id)
       return this.stop_trading()
     }
 
@@ -43,8 +43,9 @@ class Bot extends Trader {
     // }
 
     if(this._busy_executing){
+      this.chekOrder()
       this._retry++
-      return this.chekOrder()
+      return
     }
 
 

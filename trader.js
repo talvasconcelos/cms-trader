@@ -219,7 +219,7 @@ class Trader extends EventEmitter{
             side: options.side,
             type: options.type || 'LIMIT',
             price: options.price,
-            timeInForce: options.timeInForce || 'FOK',
+            timeInForce: options.timeInForce || 'GTC',
             quantity: options.quantity,
             // newClientOrderId: this.clientOrderId,
             timestamp: new Date().getTime()
@@ -355,8 +355,8 @@ class Trader extends EventEmitter{
             return false
         }
         let price = Utils.roundToNearest(this._retry > 3 ? this.ticker.data.askPrice : this.last_price, this._tickSize)
-        // let qty = Utils.roundToNearest((this.base_balance / price), this._minQty)
-        let qty = Utils.roundToNearest((0.002 / price), this._minQty)
+        let qty = Utils.roundToNearest((this.base_balance / price), this._minQty)
+        // let qty = Utils.roundToNearest((0.002 / price), this._minQty)
         if (price * qty < this._minOrder) {
             console.error('Minimum order must be', this._minOrder + '.')
             return false
