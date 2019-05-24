@@ -27,8 +27,6 @@ const cmsWS = new Sockette('wss://market-scanner.herokuapp.com', {
   onerror: e => console.log('Error:')
 })
 
-cmsWS.open()
-
 const client = new api.BinanceRest({
     key: config.API_KEY, // Get this from your account on binance.com
     secret: config.API_SECRET, // Same for this
