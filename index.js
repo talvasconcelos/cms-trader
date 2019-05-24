@@ -15,16 +15,16 @@ let CACHE
 const cmsWS = new Sockette('wss://market-scanner.herokuapp.com', {
   timeout: 5e3,
   maxAttempts: 10,
-  onopen: e => console.log('Connected!', e),
-  onmessage: msg => {
-    const data = JSON.parse(msg)
+  onopen: e => console.log('Connected!'),
+  onmessage: e => {
+    const data = JSON.parse(e.data)
     CACHE = data
     return startTrader(data)
   },
-  onreconnect: e => console.log('Reconnecting...', e),
-  onmaximum: e => console.log('Stop Attempting!', e),
-  onclose: e => console.log('Closed!', e),
-  onerror: e => console.log('Error:', e)
+  onreconnect: e => console.log('Reconnecting...'),
+  onmaximum: e => console.log('Stop Attempting!'),
+  onclose: e => console.log('Closed!'),
+  onerror: e => console.log('Error:')
 })
 
 cmsWS.open()
