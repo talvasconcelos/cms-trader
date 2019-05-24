@@ -14,7 +14,7 @@ class Trader extends EventEmitter{
         this._retry = 0
         opts = opts || {}
         this.log = opts.log || console.log
-        this.client = opts.client
+        this.client = opts.client || null
         this._base = opts.base || 'BTC'
         this._websocket = opts.websocket || null
         this._timer = null

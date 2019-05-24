@@ -37,7 +37,7 @@ const client = new api.BinanceRest({
 
 const websocket = new api.BinanceWS()
 
-let bot = null
+let bot = new Trader()
 
 slimbot && slimbot.sendMessage(config.telegramUserID, `Trader Started!`, {parse_mode: 'Markdown'}).catch(console.error)
 
@@ -90,12 +90,12 @@ const startTrader = (data) => {
   return
 }
 
-bot && bot.on('traderStart', () => {
+bot.on('traderStart', () => {
   let msg = `Buying ${bot._asset}.`
   slimbot && slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
 })
 
-bot && bot.on('tradeInfo', () => {
+bot.on('tradeInfo', () => {
   let msg = `*${bot.product}*
   *Last Price:* ${bot.last_price}
   *Buy Price:* ${bot.buyPrice}
@@ -105,21 +105,21 @@ bot && bot.on('tradeInfo', () => {
   slimbot && slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
 })
 
-bot && bot.on('tradeInfoStop', () => {
+bot.on('tradeInfoStop', () => {
   let msg = `${bot._asset} trade ended!`
   slimbot && slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
   return startTrader(CACHE)
 })
 
-bot && bot.on('traderCheckOrder', (msg) => {
+bot.on('traderCheckOrder', (msg) => {
   slimbot && slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
 })
 
-bot && bot.on('traderPersistenceTrigger', (persistence) => {
+bot.on('traderPersistenceTrigger', (persistence) => {
   let msg = `Sell price triggered, persistence activated: ${this.persistence}!`
   slimbot && slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
 })
-bot && bot.on('traderSelling', (price) => {
+bot.on('traderSelling', (price) => {
   let msg = `Trying to sell ${bot._asset} for ${price}!`
   slimbot && slimbot.sendMessage(config.telegramUserID, msg, {parse_mode: 'Markdown'}).catch(console.error)
 })
