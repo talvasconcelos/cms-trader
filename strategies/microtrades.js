@@ -43,8 +43,8 @@ class Bot extends Trader {
     // }
 
     if(this._busy_executing){
-      this.chekOrder()
       this._retry++
+      this.chekOrder()
       return
     }
 

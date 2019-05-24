@@ -265,13 +265,13 @@ class Trader extends EventEmitter{
                         self._busy_executing = false
                         self._myorders.updated = new Date()
                         self._myorders.data = data
-                        self.stop_trading()
+                        return self.stop_trading()
                     }
 
                     if (canceledManually) {
                         self._is_selling = false
                         this._busy_executing = false
-                        self.sell()
+                        return self.sell()
                     }
                 }
 
@@ -279,6 +279,7 @@ class Trader extends EventEmitter{
                     if(filled) {
                         this._tradebalance.asset = +data.executedQty
                         this._busy_executing = false
+                        return
                     }
                     if (!stillThere && !canceledManually) {
                         self._myorders.updated = new Date()
@@ -286,12 +287,13 @@ class Trader extends EventEmitter{
                         self._is_buying = false
                         self.buyPrice = self._myorders.data.price
                         self.fetch_balances()
+                        return
                         //self.start_trading()
                     }
 
                     if (canceledManually) {
                         self._is_buying = false
-                        self.buy()
+                        return this.stop_trading()
                     }
                 }
                 let msg = `${data.side}: ${this.product}
