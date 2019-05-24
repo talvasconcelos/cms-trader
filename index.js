@@ -1,4 +1,5 @@
-const WebSocket = require('ws')
+// const WebSocket = require('ws')
+global.WebSocket = require('ws')
 const Sockette = require('sockette')
 const api = require('binance')
 const Utils = require('./utils')
