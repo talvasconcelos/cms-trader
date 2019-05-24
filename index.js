@@ -1,4 +1,5 @@
 const WebSocket = require('ws')
+const Sockette = require('sockette')
 const api = require('binance')
 const Utils = require('./utils')
 const config = require('./config')
@@ -10,7 +11,20 @@ let telegramInt
 
 let CACHE
 
-const cmsWS = new WebSocket('wss://market-scanner.herokuapp.com')
+const cmsWS = new Sockette('wss://market-scanner.herokuapp.com', {
+  timeout: 5e3,
+  maxAttempts: 10,
+  onopen: e => console.log('Connected!', e),
+  onmessage: msg => {
+    const data = JSON.parse(msg)
+    CACHE = data
+    return startTrader(data)
+  },
+  onreconnect: e => console.log('Reconnecting...', e),
+  onmaximum: e => console.log('Stop Attempting!', e),
+  onclose: e => console.log('Closed!', e),
+  onerror: e => console.log('Error:', e)
+})
 const client = new api.BinanceRest({
     key: config.API_KEY, // Get this from your account on binance.com
     secret: config.API_SECRET, // Same for this
@@ -32,14 +46,14 @@ slimbot.sendMessage(config.telegramUserID, `Trader Started!`, {parse_mode: 'Mark
 
 args.length && bot.start_trading({pair: args[0], time: 60000})
 
-cmsWS.on('open', () => {console.log(`Connected to CMS`)})
-cmsWS.on('close', () => {console.log(`Lost connection!!`)})
+// cmsWS.on('open', () => {console.log(`Connected to CMS`)})
+// cmsWS.on('close', () => {console.log(`Lost connection!!`)})
 
-cmsWS.on('message', (msg) => {
-    const data = JSON.parse(msg)
-    CACHE = data
-    return startTrader(data)
-})
+// cmsWS.on('message', (msg) => {
+//     const data = JSON.parse(msg)
+//     CACHE = data
+//     return startTrader(data)
+// })
 
 const startTrader = (data) => {
   const regex = RegExp(/(BTC)$/g)
