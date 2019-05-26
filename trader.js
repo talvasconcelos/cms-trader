@@ -293,7 +293,6 @@ class Trader extends EventEmitter{
                         this._busy_executing = false
                         self.buyPrice = self._myorders.data.price
                         self.fetch_balances()
-                        return
                         //self.start_trading()
                     }
 

@@ -68,11 +68,11 @@ class Bot extends Trader {
     //console.log(this.buyPrice, this.sellPrice, this.last_price)
     if(this.is_trading){
       if(!this._initial_prices){
+        this.log('not initial')
         this.targetPrice = Utils.roundToNearest(this.buyPrice * this._TP_p, this._tickSize)
         this.stopLoss = Utils.roundToNearest(this.buyPrice / this._SL_p, this._tickSize)
         this.sellPrice = this.stopLoss
         this._initial_prices = true
-        return
       }
       this.log(`\nPair: ${this._asset} ${new Date().toTimeString()}\nLast Price: ${this.last_price}\nBuy Price: ${this.buyPrice}\nSell Price: ${this.sellPrice.toFixed(8)}\nStop Loss: ${this.stopLoss.toFixed(8)}\nTarget Price: ${this.targetPrice.toFixed(8)}\n`)
       // log(`Last Price: ${this.last_price}`.cyan)
