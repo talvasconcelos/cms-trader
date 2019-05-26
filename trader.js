@@ -219,7 +219,7 @@ class Trader extends EventEmitter{
             side: options.side,
             type: options.type || 'LIMIT',
             price: options.price,
-            timeInForce: options.timeInForce || 'GTC',
+            timeInForce: options.timeInForce || 'FOK',
             quantity: options.quantity,
             // newClientOrderId: this.clientOrderId,
             timestamp: new Date().getTime()
@@ -235,7 +235,6 @@ class Trader extends EventEmitter{
                 self._myorders.updated = new Date()
                 self._myorders.data = data
                 self._order_id = data.orderId
-                this._busy_executing = true
                 return true
             })
             .catch(err => {
@@ -276,15 +275,22 @@ class Trader extends EventEmitter{
                 }
 
                 if (data.side === 'BUY') {
-                    if(filled) {
-                        this._tradebalance.asset = +data.executedQty
-                        this._busy_executing = false
+                    // if(filled) {
+                    //     this._tradebalance.asset = +data.executedQty
+                    //     this._busy_executing = false
+                    //     self._is_buying = false
+                    //     return
+                    // }
+                    if (stillThere) {
+                        this._busy_executing = true
+                        this._retry = 0
                         return
                     }
                     if (!stillThere && !canceledManually) {
                         self._myorders.updated = new Date()
                         self._myorders.data = data
                         self._is_buying = false
+                        this._busy_executing = false
                         self.buyPrice = self._myorders.data.price
                         self.fetch_balances()
                         return
