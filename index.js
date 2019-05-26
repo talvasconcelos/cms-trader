@@ -37,7 +37,7 @@ const client = new api.BinanceRest({
 
 const websocket = new api.BinanceWS()
 
-let bot = new Trader()
+let bot = new Trader({})
 
 slimbot && slimbot.sendMessage(config.telegramUserID, `Trader Started!`, {parse_mode: 'Markdown'}).catch(console.error)
 

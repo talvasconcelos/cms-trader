@@ -13,6 +13,7 @@ class Bot extends Trader {
     this.targetPrice = null
     this.stopLoss = null
     this.persistence = 0
+    this._initial_prices = false
     this.startTime = Date.now()
     // this.updatedPrice = this.buyPrice * this._TP_p
   }
